@@ -86,5 +86,4 @@ if (country) {
     trigger.setAttribute('aria-expanded', 'false');
     sync();
 }
-const mainland=document.querySelector('#mainland_customer'),consent=document.querySelector('#mainland-consent');if(mainland&&consent){const update=()=>{consent.hidden=!mainland.checked;const checkbox=consent.querySelector('input');checkbox.disabled=!mainland.checked;if(!mainland.checked)checkbox.checked=false;};mainland.addEventListener('change',update);update();}
 document.querySelectorAll('form[data-submit-once]').forEach(form=>form.addEventListener('submit',()=>{const button=form.querySelector('[type=submit]');button.disabled=true;button.dataset.originalText=button.textContent;button.textContent=button.dataset.loadingText||'Please wait…';}));window.addEventListener('pageshow',()=>document.querySelectorAll('button[data-original-text]').forEach(b=>{b.disabled=false;b.textContent=b.dataset.originalText;}));

@@ -202,4 +202,18 @@ class RegistrationTest extends TestCase
         $privacy = Registration::firstOrFail()->consents()->whereHas('definition', fn ($q) => $q->where('code', 'privacy'))->first();
         $this->assertSame($definitions['privacy']['text'], $privacy->definition->text_snapshot);
     }
+
+    public function test_mainland_consent_is_visible_and_acceptance_is_saved_without_extra_checkbox(): void
+    {
+        $this->get(route('registration.create'))->assertOk()
+            ->assertSee(config('registration.consents.mainland_transfer.text'))
+            ->assertDontSee('I am a Chinese Mainland customer.');
+        $this->post(route('registration.store'), $this->payload([
+            'consents' => ['privacy' => '1', 'marketing_direct' => '1', 'marketing_sharing' => '1', 'mainland_transfer' => '1'],
+        ]))->assertRedirect(route('registration.thank-you'));
+        $consent = Registration::firstOrFail()->consents()
+            ->whereHas('definition', fn ($query) => $query->where('code', 'mainland_transfer'))->firstOrFail();
+        $this->assertTrue($consent->is_applicable);
+        $this->assertTrue($consent->accepted);
+    }
 }

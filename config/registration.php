@@ -24,9 +24,9 @@ return [
     ],
     'referral_sources' => ['eDirect Mail', 'Print Advertising', 'Online Advertising', 'Digital Signage', 'Others'],
     'consents' => [
-        'privacy' => ['version' => 'draft-1', 'required' => true, 'text' => 'I acknowledge and accept the privacy policies of City Dynamic, Swire Properties, and Swire Hotels.'],
-        'marketing_direct' => ['version' => 'draft-1', 'required' => false, 'text' => 'I agree to the use of my full name and contact information by City Dynamic for direct marketing.'],
-        'marketing_sharing' => ['version' => 'draft-1', 'required' => false, 'text' => 'I agree to City Dynamic disclosing my full name and contact information to Swire Properties and Swire Hotels for direct marketing.'],
-        'mainland_transfer' => ['version' => 'draft-1', 'required' => false, 'text' => 'For Chinese Mainland customers: I consent to the sharing of my personal information with service providers and partners, and its transfer outside Chinese Mainland.'],
+        'privacy' => ['version' => 'image-2026-10-15', 'required' => true, 'text' => 'I acknowledge and accept the privacy policy City Dynamic, Swire Properties, and Swire Hotels.'],
+        'marketing_direct' => ['version' => 'image-2026-10-15', 'required' => true, 'text' => 'I consent to the City Dynamic’s processing of my full name and contact details to provide me with direct marketing materials.'],
+        'marketing_sharing' => ['version' => 'image-2026-10-15', 'required' => true, 'text' => 'I consent to the City Dynamic’s disclosure of my full name and contact details to Swire Properties and Swire Hotels for them to provide me with their direct marketing materials.'],
+        'mainland_transfer' => ['version' => 'image-2026-10-15', 'required' => false, 'text' => '(For Chinese Mainland clients only), I consent to sharing my personal data with affiliated service providers and partners in the Chinese Mainland/my primary residence, as well as designated overseas service providers situated outside the Chinese Mainland / my primary residence.'],
     ],
 ];

@@ -30,6 +30,9 @@ class StoreRegistrationRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $data = [];
+        if ($this->boolean('consents.mainland_transfer')) {
+            $data['mainland_customer'] = true;
+        }
         foreach (['title', 'first_name', 'last_name', 'phone_number', 'phone_dial_code', 'email', 'referral_source'] as $key) {
             if (is_string($this->input($key))) {
                 $data[$key] = trim($this->input($key));
