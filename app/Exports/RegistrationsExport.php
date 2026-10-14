@@ -18,9 +18,10 @@ class RegistrationsExport
         try {
             $sheet = $writer->getCurrentSheet();
             $sheet->setName('Registrations');
-            $sheet->setColumnWidthForRange(24, 1, 14);
+            $sheet->setColumnWidthForRange(24, 1, 16);
             $headers = ['Reference', 'Title', 'First name', 'Last name', 'Email', 'Phone country', 'Dial code', 'Phone number', 'Session date', 'Session time', 'Session timezone', 'Guests', 'Referral source', 'Email status', 'Registered at ('.config('registration.timezone').')'];
             $headerStyle = new Style(fontBold: true, backgroundColor: 'DCE6DF');
+            $headers[] = 'Registration URL';
             $writer->addRow(new Row(array_map(fn ($value) => new StringCell($value, $headerStyle), $headers)));
             // Lazy chunks include relationships without loading the entire result set.
             foreach ($query->reorder()->lazyById(500) as $registration) {
@@ -32,6 +33,7 @@ class RegistrationsExport
                     $registration->timezone_snapshot, $registration->guest_count,
                     $registration->referral_source, $registration->confirmationEmails->last()?->status ?? 'pending',
                     $registration->created_at->timezone(config('registration.timezone'))->format('Y-m-d H:i:s'),
+                    $registration->registration_url,
                 ];
                 // Explicit string cells preserve phone numbers and prevent formula injection.
                 $writer->addRow(new Row(array_map(fn ($value) => is_int($value)

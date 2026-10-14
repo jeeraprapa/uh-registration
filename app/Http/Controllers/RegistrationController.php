@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Actions\RegisterForSession;
 use App\Http\Requests\StoreRegistrationRequest;
-use App\Models\EventSession;
 use App\Models\Registration;
+use App\Support\RegistrationDomains;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
@@ -31,7 +31,7 @@ class RegistrationController extends Controller
         $request->session()->put('registration_form_policies', $policies);
 
         return response()->view('public.registration', [
-            'sessions' => EventSession::orderBy('local_date')->orderBy('local_start_time')->get(),
+            'sessions' => app(RegistrationDomains::class)->sessions($request->getHost())->orderBy('local_date')->orderBy('local_start_time')->get(),
             'idempotencyToken' => $token, 'titles' => config('registration.titles'), 'countries' => config('registration.countries'),
             'referralSources' => config('registration.referral_sources'), 'consents' => $policies[hash('sha256', $token)],
         ])->header('Cache-Control', 'no-store');
@@ -40,6 +40,10 @@ class RegistrationController extends Controller
     public function store(StoreRegistrationRequest $request, RegisterForSession $action)
     {
         $data = $request->validated();
+        if (! app(RegistrationDomains::class)->sessions($request->getHost())->whereKey($data['event_session_id'])->exists()) {
+            throw ValidationException::withMessages(['event_session_id' => 'Please select a session available on this registration website.']);
+        }
+        $data['registration_url'] = $request->getSchemeAndHttpHost().$request->getBaseUrl().'/';
         $hash = hash('sha256', $data['idempotency_token']);
         $expires = $request->session()->get('registration_tokens', [])[$hash] ?? 0;
         if ($expires < time()) {

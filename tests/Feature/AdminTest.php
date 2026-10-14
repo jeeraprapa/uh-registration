@@ -159,6 +159,7 @@ class AdminTest extends TestCase
             $this->assertSame('+852', $rows[1][6]);
             $this->assertSame($session->timezone, $rows[1][10]);
             $this->assertSame(2, $rows[1][11]);
+            $this->assertSame('Registration URL', $rows[0][15]);
             $zip = new \ZipArchive;
             $zip->open($path);
             $this->assertStringNotContainsString('<f>', $zip->getFromName('xl/worksheets/sheet1.xml'));

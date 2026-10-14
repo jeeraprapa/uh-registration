@@ -1,6 +1,12 @@
 <?php
 
 return [
+    'domain_sessions' => [
+        'special_host' => 'registration.sprops.hk.uhresidencesbangkok.com',
+        'public_host' => 'registration.hk.uhresidencesbangkok.com',
+        'preview_hosts' => ['uh-registration.test', 'localhost', '127.0.0.1'],
+        'special' => ['date' => '2026-11-14', 'time' => '11:30:00'],
+    ],
     // Provisional country/title/consent rules require client sign-off before production.
     'policy_confirmed' => env('REGISTRATION_POLICY_CONFIRMED', false),
     'timezone' => env('EVENT_TIMEZONE', 'Asia/Hong_Kong'),

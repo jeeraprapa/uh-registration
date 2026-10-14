@@ -25,6 +25,9 @@ class RegisterForSession
             'mainland_customer' => (bool) ($input['mainland_customer'] ?? false),
             'consents' => [],
         ];
+        if (isset($input['registration_url'])) {
+            $data['registration_url'] = $input['registration_url'];
+        }
         foreach (['privacy', 'marketing_direct', 'marketing_sharing', 'mainland_transfer'] as $code) {
             $data['consents'][$code] = (bool) ($input['consents'][$code] ?? false);
         }
@@ -57,6 +60,7 @@ class RegisterForSession
                 }
                 $registration = Registration::create([
                     'reference' => (string) Str::uuid(), 'event_session_id' => $session->id,
+                    'registration_url' => $data['registration_url'] ?? null,
                     ...array_intersect_key($data, array_flip(['title', 'first_name', 'last_name', 'phone_country_code', 'phone_dial_code', 'phone_number', 'email', 'referral_source', 'guest_count'])),
                     'seat_count' => $seats, 'session_date_snapshot' => $session->local_date->format('Y-m-d'),
                     'session_time_snapshot' => $session->local_start_time, 'timezone_snapshot' => $session->timezone,

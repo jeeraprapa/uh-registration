@@ -60,6 +60,37 @@ class RegistrationTest extends TestCase
         $this->get(route('registration.thank-you'))->assertOk()->assertViewHas('registration', fn ($value) => $value->id === $booking->id);
     }
 
+    public function test_domains_filter_sessions_and_reject_other_domains_sessions(): void
+    {
+        $specialHost = 'https://registration.sprops.hk.uhresidencesbangkok.com';
+        $publicHost = 'https://registration.hk.uhresidencesbangkok.com';
+        $special = EventSession::where('local_date', '2026-11-14')->where('local_start_time', '11:30:00')->firstOrFail();
+        $other = EventSession::where('id', '!=', $special->id)->firstOrFail();
+        $this->get($specialHost.'/')->assertOk()->assertViewHas('sessions', fn ($sessions) => $sessions->modelKeys() === [$special->id]);
+        $this->get($publicHost.'/')->assertOk()->assertViewHas('sessions', fn ($sessions) => $sessions->count() === 3 && ! $sessions->contains('id', $special->id));
+        $this->get('http://uh-registration.test/')->assertOk()->assertViewHas('sessions', fn ($sessions) => $sessions->count() === 4);
+        $this->get('https://unconfigured.example/')->assertNotFound();
+        $this->post($specialHost.'/registrations', $this->payload(['event_session_id' => $other->id]))->assertSessionHasErrors('event_session_id');
+        $this->post($publicHost.'/registrations', $this->payload(['event_session_id' => $special->id]))->assertSessionHasErrors('event_session_id');
+        $this->assertDatabaseCount('registrations', 0);
+        $this->post($specialHost.'/registrations', $this->payload(['registration_url' => 'https://forged.example/']))->assertRedirect();
+        $booking = Registration::firstOrFail();
+        $this->assertSame($specialHost.'/', $booking->registration_url);
+        $this->post($specialHost.'/registrations', $this->payload())->assertRedirect();
+        $this->assertDatabaseCount('registrations', 1);
+        $publicData = $this->payload([
+            'idempotency_token' => str_repeat('b', 64), 'event_session_id' => $other->id,
+            'selected_date' => $other->local_date->format('Y-m-d'),
+        ]);
+        $this->withSession(['registration_tokens' => [hash('sha256', str_repeat('b', 64)) => time() + 3600]]);
+        $this->post($publicHost.'/registrations', $publicData)->assertRedirect();
+        $this->assertDatabaseHas('registrations', ['event_session_id' => $other->id, 'registration_url' => $publicHost.'/']);
+        $localData = $this->payload(['idempotency_token' => str_repeat('c', 64)]);
+        $this->withSession(['registration_tokens' => [hash('sha256', str_repeat('c', 64)) => time() + 3600]]);
+        $this->post('http://uh-registration.test/registrations', $localData)->assertRedirect();
+        $this->assertDatabaseHas('registrations', ['registration_url' => 'http://uh-registration.test/']);
+    }
+
     public function test_replay_after_response_loss_and_session_closed_returns_same_booking(): void
     {
         $data = $this->payload();
