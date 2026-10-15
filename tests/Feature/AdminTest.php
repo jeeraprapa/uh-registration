@@ -138,8 +138,13 @@ class AdminTest extends TestCase
             ]);
         }
         $this->actingAs($this->admin(), 'admin')->withSession(['admin_password_version' => 1]);
-        $this->get('/admin/registrations?q=%3D1%2B1')->assertOk()->assertSee('Export Excel (.xlsx)');
-        $response = $this->get('/admin/registrations/export?q=%3D1%2B1&page=2');
+        $this->get('/admin/registrations?q=%3D1%2B1&email_status=failed')->assertOk()
+            ->assertSee('Export Excel (.xlsx)')
+            ->assertDontSee('Email status')
+            ->assertDontSee('name="email_status"', false)
+            ->assertViewHas('registrations', fn ($list) => $list->total() === 21)
+            ->assertViewHas('filters', fn ($filters) => ! array_key_exists('email_status', $filters));
+        $response = $this->get('/admin/registrations/export?q=%3D1%2B1&page=2&email_status=failed');
         $response->assertOk()->assertDownload()->assertHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         $path = tempnam(sys_get_temp_dir(), 'export-test-');
         try {
@@ -159,7 +164,11 @@ class AdminTest extends TestCase
             $this->assertSame('+852', $rows[1][6]);
             $this->assertSame($session->timezone, $rows[1][10]);
             $this->assertSame(2, $rows[1][11]);
-            $this->assertSame('Registration URL', $rows[0][15]);
+            $this->assertNotContains('Email status', $rows[0]);
+            $this->assertCount(15, $rows[0]);
+            $this->assertCount(15, $rows[1]);
+            $this->assertSame('Registered at ('.config('registration.timezone').')', $rows[0][13]);
+            $this->assertSame('Registration URL', $rows[0][14]);
             $zip = new \ZipArchive;
             $zip->open($path);
             $this->assertStringNotContainsString('<f>', $zip->getFromName('xl/worksheets/sheet1.xml'));

@@ -15,12 +15,12 @@ class RegistrationController extends Controller
 {
     public function index(Request $request)
     {
-        [$query, $filters, $statuses] = $this->filteredQuery($request);
+        [$query, $filters] = $this->filteredQuery($request);
 
         return view('admin.registrations.index', [
             'registrations' => $query->latest('id')->paginate(20)->withQueryString(),
             'sessions' => EventSession::orderBy('local_date')->orderBy('local_start_time')->get(),
-            'filters' => $filters, 'referralSources' => config('registration.referral_sources'), 'emailStatuses' => $statuses,
+            'filters' => $filters, 'referralSources' => config('registration.referral_sources'),
         ]);
     }
 
@@ -39,15 +39,13 @@ class RegistrationController extends Controller
     private function filteredQuery(Request $request): array
     {
         Gate::authorize('manage-admin');
-        $statuses = ['pending', 'processing', 'local_preview', 'provider_accepted', 'failed'];
         $filters = $request->validate([
             'q' => ['nullable', 'string', 'max:150'], 'session_id' => ['nullable', 'integer', 'exists:event_sessions,id'],
             'registered_from' => ['nullable', 'date_format:Y-m-d'],
             'registered_to' => ['nullable', 'date_format:Y-m-d', Rule::when($request->filled('registered_from'), ['after_or_equal:registered_from'])],
             'referral_source' => ['nullable', Rule::in(config('registration.referral_sources'))],
-            'email_status' => ['nullable', Rule::in($statuses)],
         ]);
-        $query = Registration::with(['eventSession', 'confirmationEmails']);
+        $query = Registration::with('eventSession');
         if (! empty($filters['session_id'])) {
             $query->where('event_session_id', $filters['session_id']);
         }
@@ -68,11 +66,8 @@ class RegistrationController extends Controller
         if (! empty($filters['referral_source'])) {
             $query->where('referral_source', $filters['referral_source']);
         }
-        if (! empty($filters['email_status'])) {
-            $query->whereHas('confirmationEmails', fn ($q) => $q->where('status', $filters['email_status']));
-        }
 
-        return [$query, $filters, $statuses];
+        return [$query, $filters];
     }
 
     public function show(Registration $registration)
