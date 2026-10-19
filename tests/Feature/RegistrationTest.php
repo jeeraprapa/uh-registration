@@ -66,8 +66,19 @@ class RegistrationTest extends TestCase
         $publicHost = 'https://registration.hk.uhresidencesbangkok.com';
         $special = EventSession::where('local_date', '2026-11-14')->where('local_start_time', '11:30:00')->firstOrFail();
         $other = EventSession::where('id', '!=', $special->id)->firstOrFail();
-        $this->get($specialHost.'/')->assertOk()->assertViewHas('sessions', fn ($sessions) => $sessions->modelKeys() === [$special->id]);
-        $this->get($publicHost.'/')->assertOk()->assertViewHas('sessions', fn ($sessions) => $sessions->count() === 3 && ! $sessions->contains('id', $special->id));
+        $this->get($specialHost.'/')->assertOk()
+            ->assertViewHas('sessions', fn ($sessions) => $sessions->modelKeys() === [$special->id])
+            ->assertSee('14 November 2026 | 11.00am')
+            ->assertSee('Please complete the form to confirm your attendance.')
+            ->assertDontSee('SELECT YOUR PREFERRED SESSION')
+            ->assertSeeInOrder(['Mobile number', 'Number of guests', 'How did you hear about us?'])
+            ->assertSee('name="event_session_id" value="'.$special->id.'"', false)
+            ->assertSee('id="guest_count" name="guest_count" required', false)
+            ->assertDontSee('type="hidden" name="guest_count"', false);
+        $this->get($publicHost.'/')->assertOk()
+            ->assertViewHas('sessions', fn ($sessions) => $sessions->count() === 3 && ! $sessions->contains('id', $special->id))
+            ->assertSee('SELECT YOUR PREFERRED SESSION')
+            ->assertSee('Please complete the form below to register for your preferred session.');
         $this->get('http://uh-registration.test/')->assertOk()->assertViewHas('sessions', fn ($sessions) => $sessions->count() === 4);
         $this->get('https://unconfigured.example/')->assertNotFound();
         $this->post($specialHost.'/registrations', $this->payload(['event_session_id' => $other->id]))->assertSessionHasErrors('event_session_id');
@@ -76,6 +87,8 @@ class RegistrationTest extends TestCase
         $this->post($specialHost.'/registrations', $this->payload(['registration_url' => 'https://forged.example/']))->assertRedirect();
         $booking = Registration::firstOrFail();
         $this->assertSame($specialHost.'/', $booking->registration_url);
+        $this->assertSame('2026-11-14', $booking->session_date_snapshot->format('Y-m-d'));
+        $this->assertSame('11:30:00', $booking->session_time_snapshot);
         $this->post($specialHost.'/registrations', $this->payload())->assertRedirect();
         $this->assertDatabaseCount('registrations', 1);
         $publicData = $this->payload([
