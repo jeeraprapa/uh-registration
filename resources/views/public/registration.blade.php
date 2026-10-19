@@ -14,7 +14,7 @@
                 exceptional address.</p></div>
         <div class="event-meta">
             <div><p class="eyebrow">Event details</p>
-                <p>{{ $isSpecialHost ? 'Saturday, 14 November 2026 | 11.00am' : '14 – 15 November 2026 | 11:00 AM – 6:00 PM' }}</p>
+                <p>{{ $isSpecialHost ? 'Saturday, 14 November 2026 at 11:00am AM' : '14 – 15 November 2026 | 11:00 AM – 6:00 PM' }}</p>
             </div>
             <div><p class="eyebrow">Venue</p>
                 <p>Sky Lounge, 49/F, 88 Queensway, Admiralty,<br>Upper House Hong Kong</p>
