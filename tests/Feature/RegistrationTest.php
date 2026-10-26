@@ -57,7 +57,17 @@ class RegistrationTest extends TestCase
         $this->assertFalse($booking->consents()->whereHas('definition', fn ($q) => $q->where('code', 'marketing_direct'))->first()->accepted);
         $this->assertNull($booking->consents()->whereHas('definition', fn ($q) => $q->where('code', 'mainland_transfer'))->first()->accepted);
         $this->assertSame('pending', $booking->confirmationEmails->first()->status);
-        $this->get(route('registration.thank-you'))->assertOk()->assertViewHas('registration', fn ($value) => $value->id === $booking->id);
+        $this->get(route('registration.thank-you'))->assertOk()
+            ->assertViewHas('registration', fn ($value) => $value->id === $booking->id)
+            ->assertViewHas('submissionId', $booking->reference)
+            ->assertSee("event: 'registration'", false)
+            ->assertSee($booking->reference);
+        $this->get(route('registration.thank-you'))->assertOk()
+            ->assertViewHas('submissionId', null)
+            ->assertDontSee("event: 'registration'", false);
+        $this->post(route('registration.store'), $this->payload())->assertRedirect(route('registration.thank-you'));
+        $this->get(route('registration.thank-you'))->assertOk()
+            ->assertDontSee("event: 'registration'", false);
     }
 
     public function test_domains_filter_sessions_and_reject_other_domains_sessions(): void

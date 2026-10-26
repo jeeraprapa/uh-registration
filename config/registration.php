@@ -4,7 +4,7 @@ return [
     'domain_sessions' => [
         'special_host' => 'registration.sprops.hk.uhresidencesbangkok.com',
         'public_host' => 'registration.hk.uhresidencesbangkok.com',
-        'preview_hosts' => ['uh-registration.test', 'localhost', '127.0.0.1','g-dev.top'],
+        'preview_hosts' => ['uh-registration.test', 'localhost', '127.0.0.1', 'g-dev.top'],
         'special' => ['date' => '2026-11-14', 'time' => '11:00:00'],
     ],
     // Provisional country/title/consent rules require client sign-off before production.
@@ -12,7 +12,7 @@ return [
     'timezone' => env('EVENT_TIMEZONE', 'Asia/Hong_Kong'),
     'guests_include_registrant' => env('GUESTS_INCLUDE_REGISTRANT', true),
     'mail_mode' => env('REGISTRATION_MAIL_MODE', 'local'),
-    'venue' => 'Sky Lounge, 49/F, 88 Queensway, Admiralty, Upper House Hong Kong',
+    'venue' => 'Sky Lounge, 49/F Upper House Hong Kong, 88 Queensway, Admiralty, Hong Kong',
     'titles' => ['Mr.', 'Mrs.', 'Ms.', 'Dr.'],
     'countries' => [
         ['code' => 'HK', 'name' => 'Hong Kong', 'dial_code' => '+852'],

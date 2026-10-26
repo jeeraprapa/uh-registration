@@ -17,7 +17,7 @@
                 <p>{{ $isSpecialHost ? 'Saturday, 14 November 2026 at 11:00 AM' : '14 – 15 November 2026 | 11:00 AM – 6:00 PM' }}</p>
             </div>
             <div><p class="eyebrow">Venue</p>
-                <p>Sky Lounge, 49/F, 88 Queensway, Admiralty,<br>Upper House Hong Kong</p>
+                <p>Sky Lounge, 49/F Upper House Hong Kong<br>88 Queensway, Admiralty, Hong Kong</p>
             </div>
         </div>
     </section>
@@ -77,7 +77,7 @@
                         id="last_name" name="last_name" value="{{ old('last_name') }}"
                         required maxlength="150" autocomplete="family-name"></div>
             </div>
-            <div class="grid-two">
+            <div class="grid-two contact-fields">
                 <div class="field"><label for="phone_number">Mobile number *</label>
                     <div class="phone-row"><select id="phone_country_code"
                                                    name="phone_country_code"

@@ -61,6 +61,9 @@ class RegistrationController extends Controller
             return back()->withErrors(['registration' => 'We could not complete your registration. Please try again using this form.'])->withInput();
         }
         $request->session()->put('confirmed_registration_id', $registration->id);
+        if ($registration->wasRecentlyCreated) {
+            $request->session()->put('registration_tracking_reference', $registration->reference);
+        }
 
         // The durable pending email record is dispatched by the scheduler; no queue failure can undo this booking.
         return redirect()->route('registration.thank-you');
@@ -73,6 +76,11 @@ class RegistrationController extends Controller
             return redirect()->route('registration.create');
         }
 
-        return response()->view('public.thank-you', compact('registration'))->header('Cache-Control', 'no-store');
+        $submissionId = $request->session()->pull('registration_tracking_reference');
+        if ($submissionId !== $registration->reference) {
+            $submissionId = null;
+        }
+
+        return response()->view('public.thank-you', compact('registration', 'submissionId'))->header('Cache-Control', 'no-store');
     }
 }

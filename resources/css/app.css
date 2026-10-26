@@ -11,3 +11,7 @@
 
 
 .filter-dates{grid-column:1/-1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.filter-dates .field{min-width:0}.filter-dates input{min-width:0;width:100%}
+
+.grid-name .field input,.grid-name .field select{height:42px;line-height:22px}
+
+@media(max-width:700px){.contact-fields{grid-template-columns:minmax(0,1fr);row-gap:0}.contact-fields .phone-row input{min-width:0}}
