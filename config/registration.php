@@ -1,6 +1,11 @@
 <?php
 
 return [
+    'registration_urls' => [
+        'https://registration.uhhk.uhresidencesbangkok.com/',
+        'https://registration.sprops.hk.uhresidencesbangkok.com/',
+        'https://registration.hk.uhresidencesbangkok.com/',
+    ],
     'domain_sessions' => [
         'special_host' => 'registration.sprops.hk.uhresidencesbangkok.com',
         'public_host' => 'registration.hk.uhresidencesbangkok.com',

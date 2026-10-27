@@ -124,6 +124,60 @@ class AdminTest extends TestCase
         $this->get('/admin/registrations?registered_from=2026-10-11&registered_to=2026-10-10')->assertSessionHasErrors('registered_to');
     }
 
+    public function test_registration_url_filter_applies_to_list_and_export(): void
+    {
+        $this->seed();
+        $session = EventSession::firstOrFail();
+        $urls = config('registration.registration_urls');
+        $bookings = [];
+        foreach ([...$urls, null] as $index => $url) {
+            $bookings[] = app(RegisterForSession::class)->execute([
+                'idempotency_token' => hash('sha256', 'url-filter-'.$index),
+                'event_session_id' => $session->id, 'selected_date' => $session->local_date->format('Y-m-d'),
+                'guest_count' => 1, 'title' => 'Mr.', 'first_name' => 'URL', 'last_name' => 'Filter',
+                'phone_country_code' => 'HK', 'phone_dial_code' => '+852', 'phone_number' => '00000000',
+                'email' => 'url'.$index.'@example.test', 'referral_source' => 'Others',
+                'consents' => ['privacy' => true, 'marketing_direct' => true, 'marketing_sharing' => true],
+                'registration_url' => $index === 1 ? rtrim($url, '/') : $url,
+            ]);
+        }
+        $this->actingAs($this->admin(), 'admin')->withSession(['admin_password_version' => 1]);
+        $this->get('/admin/registrations')->assertOk()
+            ->assertSee('All registration URLs')
+            ->assertViewHas('registrations', fn ($list) => $list->total() === 4);
+        $this->get('/admin')->assertOk()->assertSee('Registrations by URL')
+            ->assertViewHas('registrationsByUrl', fn ($sources) => $sources->count() === 3
+                && $sources->pluck('url')->all() === $urls
+                && $sources->every(fn ($source) => $source['bookings'] === 1 && $source['guests'] === 1));
+
+        foreach ($urls as $index => $url) {
+            $query = http_build_query(['registration_url' => $url, 'referral_source' => 'Others']);
+            $this->get('/admin/registrations?'.$query)->assertOk()
+                ->assertViewHas('registrations', fn ($list) => $list->total() === 1 && $list->first()->id === $bookings[$index]->id);
+            $response = $this->get('/admin/registrations/export?'.$query)->assertOk()->assertDownload();
+            $path = tempnam(sys_get_temp_dir(), 'url-export-');
+            $reader = new Reader;
+            try {
+                file_put_contents($path, $response->streamedContent());
+                $reader->open($path);
+                $rows = [];
+                foreach ($reader->getSheetIterator() as $sheet) {
+                    foreach ($sheet->getRowIterator() as $row) {
+                        $rows[] = $row->toArray();
+                    }
+                }
+                $this->assertCount(2, $rows);
+                $this->assertSame($bookings[$index]->reference, $rows[1][0]);
+            } finally {
+                $reader->close();
+                unlink($path);
+            }
+        }
+        foreach (['/admin/registrations', '/admin/registrations/export'] as $path) {
+            $this->get($path.'?registration_url=https://unconfigured.example/')->assertSessionHasErrors('registration_url');
+        }
+    }
+
     public function test_excel_export_includes_all_filtered_rows_and_preserves_text_safely(): void
     {
         $this->seed();

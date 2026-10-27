@@ -21,6 +21,7 @@ class RegistrationController extends Controller
             'registrations' => $query->latest('id')->paginate(20)->withQueryString(),
             'sessions' => EventSession::orderBy('local_date')->orderBy('local_start_time')->get(),
             'filters' => $filters, 'referralSources' => config('registration.referral_sources'),
+            'registrationUrls' => config('registration.registration_urls'),
         ]);
     }
 
@@ -44,6 +45,7 @@ class RegistrationController extends Controller
             'registered_from' => ['nullable', 'date_format:Y-m-d'],
             'registered_to' => ['nullable', 'date_format:Y-m-d', Rule::when($request->filled('registered_from'), ['after_or_equal:registered_from'])],
             'referral_source' => ['nullable', Rule::in(config('registration.referral_sources'))],
+            'registration_url' => ['nullable', Rule::in(config('registration.registration_urls'))],
         ]);
         $query = Registration::with('eventSession');
         if (! empty($filters['session_id'])) {
@@ -65,6 +67,9 @@ class RegistrationController extends Controller
         }
         if (! empty($filters['referral_source'])) {
             $query->where('referral_source', $filters['referral_source']);
+        }
+        if (! empty($filters['registration_url'])) {
+            $query->whereIn('registration_url', [$filters['registration_url'], rtrim($filters['registration_url'], '/')]);
         }
 
         return [$query, $filters];
