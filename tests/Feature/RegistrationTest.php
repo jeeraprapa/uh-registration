@@ -70,6 +70,30 @@ class RegistrationTest extends TestCase
             ->assertDontSee("event: 'registration'", false);
     }
 
+    public function test_uhhk_domain_allows_every_session_and_records_its_source(): void
+    {
+        $host = 'https://registration.uhhk.uhresidencesbangkok.com';
+        $sessions = EventSession::orderBy('local_date')->orderBy('local_start_time')->get();
+        $this->get($host.'/')->assertOk()
+            ->assertViewHas('sessions', fn ($available) => $available->modelKeys() === $sessions->modelKeys())
+            ->assertSee('SELECT YOUR PREFERRED SESSION');
+
+        foreach ($sessions as $session) {
+            $token = hash('sha256', 'uhhk-session-'.$session->id);
+            $data = $this->payload([
+                'idempotency_token' => $token,
+                'event_session_id' => $session->id,
+                'selected_date' => $session->local_date->format('Y-m-d'),
+            ]);
+            $this->withSession(['registration_tokens' => [hash('sha256', $token) => time() + 3600]]);
+            $this->post($host.'/registrations', $data)->assertRedirect(route('registration.thank-you'));
+            $this->assertDatabaseHas('registrations', [
+                'event_session_id' => $session->id,
+                'registration_url' => $host.'/',
+            ]);
+        }
+    }
+
     public function test_domains_filter_sessions_and_reject_other_domains_sessions(): void
     {
         $specialHost = 'https://registration.sprops.hk.uhresidencesbangkok.com';

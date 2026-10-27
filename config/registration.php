@@ -4,7 +4,7 @@ return [
     'domain_sessions' => [
         'special_host' => 'registration.sprops.hk.uhresidencesbangkok.com',
         'public_host' => 'registration.hk.uhresidencesbangkok.com',
-        'preview_hosts' => ['uh-registration.test', 'localhost', '127.0.0.1', 'g-dev.top'],
+        'preview_hosts' => ['uh-registration.test', 'localhost', '127.0.0.1', 'g-dev.top', 'registration.uhhk.uhresidencesbangkok.com'],
         'special' => ['date' => '2026-11-14', 'time' => '11:00:00'],
     ],
     // Provisional country/title/consent rules require client sign-off before production.
