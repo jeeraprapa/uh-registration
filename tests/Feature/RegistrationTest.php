@@ -57,9 +57,11 @@ class RegistrationTest extends TestCase
         $this->assertFalse($booking->consents()->whereHas('definition', fn ($q) => $q->where('code', 'marketing_direct'))->first()->accepted);
         $this->assertNull($booking->consents()->whereHas('definition', fn ($q) => $q->where('code', 'mainland_transfer'))->first()->accepted);
         $this->assertSame('pending', $booking->confirmationEmails->first()->status);
+        $this->withSession(['registration_tracking_reference' => null]);
         $this->get(route('registration.thank-you'))->assertOk()
             ->assertViewHas('registration', fn ($value) => $value->id === $booking->id)
             ->assertViewHas('submissionId', $booking->reference)
+            ->assertSessionHas('registration_tracked_references.'.$booking->reference, true)
             ->assertSee("event: 'registration'", false)
             ->assertSee($booking->reference);
         $this->get(route('registration.thank-you'))->assertOk()

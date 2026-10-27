@@ -61,9 +61,6 @@ class RegistrationController extends Controller
             return back()->withErrors(['registration' => 'We could not complete your registration. Please try again using this form.'])->withInput();
         }
         $request->session()->put('confirmed_registration_id', $registration->id);
-        if ($registration->wasRecentlyCreated) {
-            $request->session()->put('registration_tracking_reference', $registration->reference);
-        }
 
         // The durable pending email record is dispatched by the scheduler; no queue failure can undo this booking.
         return redirect()->route('registration.thank-you');
@@ -76,10 +73,14 @@ class RegistrationController extends Controller
             return redirect()->route('registration.create');
         }
 
-        $submissionId = $request->session()->pull('registration_tracking_reference');
-        if ($submissionId !== $registration->reference) {
-            $submissionId = null;
+        $trackedReferences = $request->session()->get('registration_tracked_references', []);
+        $submissionId = null;
+        if (! isset($trackedReferences[$registration->reference])) {
+            $submissionId = $registration->reference;
+            $trackedReferences[$submissionId] = true;
+            $request->session()->put('registration_tracked_references', $trackedReferences);
         }
+        $request->session()->forget('registration_tracking_reference');
 
         return response()->view('public.thank-you', compact('registration', 'submissionId'))->header('Cache-Control', 'no-store');
     }
